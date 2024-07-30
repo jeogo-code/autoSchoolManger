@@ -1,26 +1,29 @@
-const TrafficLawsPagination = () => {
+const TrafficLawsPagination = ({ sessionsPerPage, totalSessions, paginate, currentPage }) => {
+  const pageNumbers = []
+
+  for (let i = 1; i <= Math.ceil(totalSessions / sessionsPerPage); i++) {
+    pageNumbers.push(i)
+  }
+
   return (
-    <div className="card-footer py-4 container">
-      <nav aria-label="Pagination" className="pull-left">
-        <ul className="pagination justify-content-end mb-0">
-          <li className="page-item disabled">
-            <a className="page-link" href="#" tabIndex="-1">
-              <i className="fas fa-angle-right"></i> <span className="sr-only">Previous</span>
-            </a>
+    <nav className="flex justify-center mt-4">
+      <ul className="flex space-x-2">
+        {pageNumbers.map((number) => (
+          <li key={number}>
+            <button
+              onClick={() => paginate(number)}
+              className={`px-3 py-1 mx-1 rounded-md ${
+                currentPage === number
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white text-green-600 hover:bg-green-100'
+              }`}
+            >
+              {number}
+            </button>
           </li>
-          <li className="page-item active">
-            <a className="page-link" href="#">
-              1
-            </a>
-          </li>
-          <li className="page-item disabled">
-            <a className="page-link" href="#">
-              <i className="fas fa-angle-left"></i> <span className="sr-only">Next</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
+        ))}
+      </ul>
+    </nav>
   )
 }
 

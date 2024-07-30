@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleRight, faAngleLeft } from '@fortawesome/free-solid-svg-icons'
 
-const ExamsPagination = ({ currentPage, totalPages, onPageChange }) => {
+const GroupsPagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = []
   for (let i = 1; i <= totalPages; i++) {
     pages.push(i)
@@ -15,7 +15,6 @@ const ExamsPagination = ({ currentPage, totalPages, onPageChange }) => {
             direction="left"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            aria-label="الصفحة السابقة"
           />
           {pages.map((page) => (
             <PaginationButton
@@ -23,14 +22,12 @@ const ExamsPagination = ({ currentPage, totalPages, onPageChange }) => {
               page={page}
               active={page === currentPage}
               onClick={() => onPageChange(page)}
-              aria-label={`الصفحة ${page}`}
             />
           ))}
           <PaginationButton
             direction="right"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            aria-label="الصفحة التالية"
           />
         </ul>
       </nav>
@@ -38,17 +35,16 @@ const ExamsPagination = ({ currentPage, totalPages, onPageChange }) => {
   )
 }
 
-const PaginationButton = ({ direction, page, active, onClick, disabled, ariaLabel }) => {
+const PaginationButton = ({ direction, page, active, onClick, disabled }) => {
   if (direction) {
     return (
       <li>
         <button
           onClick={onClick}
-          className={`px-3 py-1 mx-1 rounded-md bg-white text-yellow-600 hover:bg-yellow-100 ${
+          className={`px-3 py-1 mx-1 rounded-md bg-white text-purple-600 hover:bg-purple-100 ${
             direction === 'left' ? 'rounded-e-lg' : 'rounded-s-lg'
           } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={disabled}
-          aria-label={ariaLabel}
         >
           <FontAwesomeIcon icon={direction === 'left' ? faAngleLeft : faAngleRight} />
         </button>
@@ -61,9 +57,8 @@ const PaginationButton = ({ direction, page, active, onClick, disabled, ariaLabe
       <button
         onClick={onClick}
         className={`px-3 py-1 mx-1 rounded-md ${
-          active ? 'bg-yellow-600 text-white' : 'bg-white text-yellow-600 hover:bg-yellow-100'
+          active ? 'bg-purple-600 text-white' : 'bg-white text-purple-600 hover:bg-purple-100'
         }`}
-        aria-label={ariaLabel}
       >
         {page}
       </button>
@@ -71,4 +66,4 @@ const PaginationButton = ({ direction, page, active, onClick, disabled, ariaLabe
   )
 }
 
-export default ExamsPagination
+export default GroupsPagination

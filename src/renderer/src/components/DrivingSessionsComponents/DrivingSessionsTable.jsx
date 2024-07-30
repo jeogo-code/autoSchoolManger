@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrashAlt, faEye, faUsers } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faTrashAlt, faEye } from '@fortawesome/free-solid-svg-icons'
 
 const DrivingSessionsTable = ({ sessions, onEdit, onRemove, onShow }) => {
   return (
@@ -8,7 +8,9 @@ const DrivingSessionsTable = ({ sessions, onEdit, onRemove, onShow }) => {
         <thead className="bg-blue-600 text-white">
           <tr>
             <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">المجموعة</th>
-            <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">عدد المترشحين</th>
+            <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">المترشح</th>
+            <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">التاريخ</th>
+            <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">التوقيت</th>
             <th className="px-6 py-4 text-right text-sm font-semibold uppercase tracking-wider">عملية</th>
           </tr>
         </thead>
@@ -20,10 +22,13 @@ const DrivingSessionsTable = ({ sessions, onEdit, onRemove, onShow }) => {
                   <div className="text-sm font-medium text-gray-900">{session.group}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FontAwesomeIcon icon={faUsers} className="ml-2 text-blue-500" />
-                    <span className="text-sm text-gray-900">{session.clientCount}</span>
-                  </div>
+                  <div className="text-sm font-medium text-gray-900">{session.client}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{session.date}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{session.time}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
@@ -52,9 +57,9 @@ const DrivingSessionsTable = ({ sessions, onEdit, onRemove, onShow }) => {
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="px-6 py-4 text-center">
+              <td colSpan="5" className="px-6 py-4 text-center">
                 <div className="bg-blue-50 text-blue-700 p-4 rounded-lg">
-                  <p className="text-lg font-semibold">لا توجد اي حصة</p>
+                  <p className="text-lg font-semibold">لا توجد أي حصة</p>
                   <p className="text-sm mt-1">قم بإضافة حصة جديدة للبدء</p>
                 </div>
               </td>

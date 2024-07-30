@@ -1,211 +1,333 @@
 import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import {
+  faTimes,
+  faPlus,
+  faTrashAlt,
+  faCheckSquare,
+  faSearch,
+  faClock
+} from '@fortawesome/free-solid-svg-icons'
 
-const lessonsList = [
-  { id: 4155, name: 'الإشارات الطرقية' },
-  { id: 4156, name: 'لوحات الخطر' },
-  { id: 4157, name: 'اللوحات ذات الإشارات البسيطة' },
-  { id: 4158, name: 'اشارات اثبات الطريق' },
-  { id: 4159, name: 'مراجعة عامة وتمارين' },
-  { id: 4160, name: 'الاشارات المتعلقة بملتقيات الطرق ونظم الاولوية' },
-  { id: 4161, name: 'اللويحات' },
-  { id: 4162, name: 'الاشارات الضوئية واشارات اعوان والنظام العام' },
-  { id: 4163, name: 'الاشارات الافقية' },
-  { id: 4164, name: 'الاشارات الافقية' },
-  { id: 4165, name: 'ملتقيات الطرق' },
-  { id: 4166, name: 'المعالم' },
-  { id: 4167, name: 'مراجعة عامة وتمارين' },
-  { id: 4168, name: 'التنظيم' },
-  { id: 4169, name: 'التنظيم' },
-  { id: 4170, name: 'حالات سحب رخص السياقة' },
-  { id: 4171, name: 'الطريق السيار' },
-  { id: 4172, name: 'وقاية وامن الطرقات' },
-  { id: 4173, name: 'السياقة الوقائية اثناء الشتاء' },
-  { id: 4174, name: 'إشكال التعارض' },
-  { id: 4175, name: 'المركبة' },
-  { id: 4176, name: 'البيئة الطرقية' },
-  { id: 4177, name: 'علم الحوادث' },
-  { id: 4178, name: 'الإسعافية' },
-  { id: 4179, name: 'مراجعة عامة وتمارين' }
-]
+const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }) => {
+  const [formData, setFormData] = useState({
+    date: session?.date || '',
+    selectedGroup: '',
+    clients: session?.clients || [],
+    lessons: session?.lessons || [],
+    time: ''
+  })
 
-const TrafficLawsModal = ({ session, onClose, onSave, groups }) => {
-  const [groupId, setGroupId] = useState(session ? session.groupId : '')
-  const [date, setDate] = useState(session ? session.date : '')
-  const [time, setTime] = useState(session ? session.time : '')
-  const [lessons, setLessons] = useState(session ? session.lessons : [])
-  const [presentClients, setPresentClients] = useState(session ? session.attendance.present : [])
-  const [absentClients, setAbsentClients] = useState(session ? session.attendance.absent : [])
   const [availableClients, setAvailableClients] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredClients, setFilteredClients] = useState([])
+
+  const lessonsList = [
+    'الإشارات الطرقية',
+    'لوحات الخطر',
+    'اللوحات ذات الإشارات البسيطة',
+    'اشارات اثبات الطريق',
+    'مراجعة عامة وتمارين',
+    'الاشارات المتعلقة بملتقيات الطرق ونظم الاولوية',
+    'اللويحات',
+    'الاشارات الضوئية واشارات اعوان والنظام العام',
+    'الاشارات الافقية',
+    'ملتقيات الطرق',
+    'المعالم',
+    'حالات سحب رخص السياقة',
+    'الطريق السيار',
+    'وقاية وامن الطرقات',
+    'السياقة الوقائية اثناء الشتاء',
+    'إشكال التعارض',
+    'المركبة',
+    'البيئة الطرقية',
+    'علم الحوادث',
+    'الإسعافية'
+  ]
 
   useEffect(() => {
-    if (groupId) {
-      const group = groups.find((g) => g.id === parseInt(groupId))
-      setAvailableClients(group ? group.clients : [])
+    if (formData.selectedGroup) {
+      const selectedGroup = groups.find((group) => group.id === parseInt(formData.selectedGroup))
+      setAvailableClients(
+        selectedGroup
+          ? selectedGroup.clients.map((id) => clients.find((client) => client.id === id))
+          : []
+      )
     } else {
-      setAvailableClients([])
+      setAvailableClients(clients)
     }
-  }, [groupId, groups])
+  }, [formData.selectedGroup, groups, clients])
 
-  const handleLessonChange = (lessonId) => {
-    setLessons(
-      lessons.includes(lessonId) ? lessons.filter((id) => id !== lessonId) : [...lessons, lessonId]
+  useEffect(() => {
+    const filtered = availableClients.filter((client) =>
+      client?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
+    setFilteredClients(filtered)
+  }, [searchTerm, availableClients])
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleClientAttendance = (clientId, isPresent) => {
-    if (isPresent) {
-      setPresentClients([...presentClients, clientId])
-      setAbsentClients(absentClients.filter((id) => id !== clientId))
+  const handleGroupChange = (e) => {
+    const groupId = e.target.value
+    setFormData((prev) => ({
+      ...prev,
+      selectedGroup: groupId,
+      clients: [] // Reset clients when changing the group
+    }))
+  }
+
+  const handleClientAction = (action, clientId) => {
+    if (action === 'add') {
+      const client = availableClients.find((c) => c.id === parseInt(clientId))
+      if (client && !formData.clients.some((c) => c.id === client.id)) {
+        setFormData((prev) => ({
+          ...prev,
+          clients: [...prev.clients, { ...client, time: '', checkIn: '' }]
+        }))
+      }
+    } else if (action === 'remove') {
+      setFormData((prev) => ({
+        ...prev,
+        clients: prev.clients.filter((client) => client.id !== clientId)
+      }))
+    }
+  }
+
+  const handleClientTimeChange = (clientId, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      clients: prev.clients.map((client) =>
+        client.id === clientId ? { ...client, [field]: value } : client
+      )
+    }))
+  }
+
+  const handleLessonChange = (lesson) => {
+    setFormData((prev) => ({
+      ...prev,
+      lessons: prev.lessons.includes(lesson)
+        ? prev.lessons.filter((item) => item !== lesson)
+        : [...prev.lessons, lesson]
+    }))
+  }
+
+  const handleSelectAllLessons = () => {
+    if (formData.lessons.length === lessonsList.length) {
+      setFormData((prev) => ({ ...prev, lessons: [] }))
     } else {
-      setAbsentClients([...absentClients, clientId])
-      setPresentClients(presentClients.filter((id) => id !== clientId))
+      setFormData((prev) => ({ ...prev, lessons: lessonsList }))
     }
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const sessionData = {
-      groupId,
-      date,
-      time,
-      lessons,
-      attendance: { present: presentClients, absent: absentClients }
-    }
-    onSave(sessionData)
+    const updatedClients = formData.clients.map((client) => ({
+      ...client,
+      groupId: groups.find((g) => g.clients.includes(client.id))?.id
+    }))
+    onSave({ ...formData, clients: updatedClients })
     onClose()
+  }
+
+  const handleSetAllTimes = () => {
+    if (formData.time) {
+      setFormData((prev) => ({
+        ...prev,
+        clients: prev.clients.map((client) => ({ ...client, checkIn: formData.time }))
+      }))
+    }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-4 overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{session ? 'تعديل الحصة' : 'إضافة حصة'}</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
-            <FontAwesomeIcon icon={faTimes} />
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b bg-gray-50">
+          <h2 className="text-2xl font-bold text-gray-800">
+            {session ? 'تعديل الحصة' : 'إضافة حصة'}
+          </h2>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-900 transition-colors">
+            <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="group" className="block text-sm font-medium text-gray-700">
-                المجموعة
-              </label>
-              <select
-                id="group"
-                value={groupId}
-                onChange={(e) => setGroupId(e.target.value)}
-                className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+
+        <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-8">
+          {/* Session Details */}
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">تفاصيل الحصة</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 required
+              />
+              <select
+                name="selectedGroup"
+                value={formData.selectedGroup}
+                onChange={handleGroupChange}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
-                <option value="">اختر مجموعة</option>
+                <option value="">كل المجموعات</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.name}
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-                تاريخ
-              </label>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                required
-              />
-            </div>
-            <div>
-              <label htmlFor="time" className="block text-sm font-medium text-gray-700">
-                التوقيت
-              </label>
-              <input
-                type="time"
-                id="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                required
-              />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  className="flex-grow p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  onClick={handleSetAllTimes}
+                  className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <FontAwesomeIcon icon={faClock} />
+                </button>
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">الدروس</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-              {lessonsList.map((lesson) => (
-                <div key={lesson.id} className="flex items-center">
+          {/* Attendance Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">الحضور والغياب</h3>
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="البحث عن العملاء"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full p-3 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Present Clients */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-700 mb-3">الحاضرون</h4>
+                <ul className="bg-gray-50 rounded-lg shadow-inner overflow-y-auto max-h-80 divide-y divide-gray-200">
+                  {formData.clients.map((client) => (
+                    <li
+                      key={client.id}
+                      className="flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
+                    >
+                      <div>
+                        <span className="font-medium text-gray-800">{client.name}</span>
+                        <span className="text-sm text-gray-500 block">
+                          {groups.find((g) => g.clients.some((c) => c.id === client.id))?.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="time"
+                          value={client.checkIn}
+                          onChange={(e) =>
+                            handleClientTimeChange(client.id, 'checkIn', e.target.value)
+                          }
+                          className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleClientAction('remove', client.id)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faTrashAlt} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Absent Clients */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-700 mb-3">الغائبون</h4>
+                <ul className="bg-gray-50 rounded-lg shadow-inner overflow-y-auto max-h-80 divide-y divide-gray-200">
+                  {filteredClients
+                    .filter(
+                      (client) =>
+                        !formData.clients.some((selectedClient) => selectedClient.id === client.id)
+                    )
+                    .map((client) => (
+                      <li
+                        key={client.id}
+                        className="flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
+                      >
+                        <div>
+                          <span className="font-medium text-gray-800">{client.name}</span>
+                          <span className="text-sm text-gray-500 block">
+                            {groups.find((g) => g.clients.some((c) => c.id === client.id))?.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleClientAction('add', client.id)}
+                          className="text-green-500 hover:text-green-700 transition-colors"
+                        >
+                          <FontAwesomeIcon icon={faPlus} />
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {/* Lessons Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">الدروس</h3>
+            <button
+              type="button"
+              onClick={handleSelectAllLessons}
+              className="w-full bg-blue-600 text-white px-6 py-2 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center mb-4"
+            >
+              <FontAwesomeIcon icon={faCheckSquare} className="mr-2" />
+              <span>تحديد الكل</span>
+            </button>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {lessonsList.map((lesson, index) => (
+                <div key={index} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    id={`lesson-${lesson.id}`}
-                    checked={lessons.includes(lesson.id)}
-                    onChange={() => handleLessonChange(lesson.id)}
-                    className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                    id={`lesson-${index}`}
+                    checked={formData.lessons.includes(lesson)}
+                    onChange={() => handleLessonChange(lesson)}
+                    className="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                   />
-                  <label htmlFor={`lesson-${lesson.id}`} className="ml-2 text-sm text-gray-700">
-                    {lesson.name}
+                  <label
+                    htmlFor={`lesson-${index}`}
+                    className="text-sm font-semibold text-gray-700"
+                  >
+                    {lesson}
                   </label>
                 </div>
               ))}
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">الحضور</label>
-            <div className="mt-1 overflow-y-auto max-h-40">
-              <table className="min-w-full table-auto border-collapse">
-                <thead className="bg-green-600 text-white">
-                  <tr>
-                    <th className="px-4 py-2 border-b-2 border-gray-200">ID</th>
-                    <th className="px-4 py-2 border-b-2 border-gray-200">اسم المترشح</th>
-                    <th className="px-4 py-2 border-b-2 border-gray-200">الحضور</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {availableClients.length > 0 ? (
-                    availableClients.map((client) => (
-                      <tr key={client.id} className="hover:bg-teal-50">
-                        <td className="px-4 py-2 border-b border-gray-200">{client.id}</td>
-                        <td className="px-4 py-2 border-b border-gray-200">{client.name}</td>
-                        <td className="px-4 py-2 border-b border-gray-200">
-                          <select
-                            value={presentClients.includes(client.id) ? 'present' : 'absent'}
-                            onChange={(e) =>
-                              handleClientAttendance(client.id, e.target.value === 'present')
-                            }
-                            className="block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                          >
-                            <option value="present">حاضر</option>
-                            <option value="absent">غائب</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="3" className="text-center py-2">
-                        <div role="alert" className="alert alert-secondary">
-                          <h2 className="text-center">لا يوجد مترشحون</h2>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="text-center">
-            <button
-              type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded-md shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-            >
-              حفظ
-            </button>
-          </div>
         </form>
+
+        <div className="border-t p-6 bg-gray-50">
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          >
+            حفظ
+          </button>
+        </div>
       </div>
     </div>
   )

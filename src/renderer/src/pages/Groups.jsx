@@ -1,17 +1,24 @@
 import { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faTrashAlt, faUsers, faUserPlus } from '@fortawesome/free-solid-svg-icons'
+import { faUsers, faSearch } from '@fortawesome/free-solid-svg-icons'
 import NavBar from '../components/NavBar'
-import ClientModal from '../modals/ClientModal' // Updated import path
+import GroupTable from '../components/GroupsComponents/GroupTable'
+import GroupFilters from '../components/GroupsComponents/GroupFilters'
+import ClientModal from '../Modals/ClientModal'
+import GroupsPagination from '../components/GroupsComponents/GroupsPagination'
 
-const Groups = () => {
+const GroupsPage = () => {
   const [groups, setGroups] = useState([
-    { id: 1, name: 'مجموعة 01', clients: [1] },
-    { id: 2, name: 'مجموعة 02', clients: [] }
+    { id: 1, name: 'مجموعة 01', clients: [1, 2, 3] },
+    { id: 2, name: 'مجموعة 02', clients: [] },
+    { id: 3, name: 'مجموعة 03', clients: [4, 5] }
   ])
   const [newGroupName, setNewGroupName] = useState('')
   const [selectedGroupId, setSelectedGroupId] = useState(null)
   const [showClientModal, setShowClientModal] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const groupsPerPage = 2
 
   const handleAddGroup = () => {
     if (newGroupName.trim()) {
@@ -35,80 +42,68 @@ const Groups = () => {
     )
   }
 
+  const filteredGroups = groups.filter((group) =>
+    group.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const paginatedGroups = filteredGroups.slice(
+    (currentPage - 1) * groupsPerPage,
+    currentPage * groupsPerPage
+  )
+
+  const totalPages = Math.ceil(filteredGroups.length / groupsPerPage)
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+  }
+
   return (
     <div
       dir="rtl"
-      className="w-full bg-gradient-to-br from-teal-50 to-cyan-100 py-12 px-4 sm:px-6 lg:px-8"
+      className="w-full bg-gradient-to-b from-teal-50 to-cyan-100 py-8 px-4 sm:px-6 lg:px-8"
     >
-      <div className="container mx-auto bg-white shadow-2xl rounded-lg overflow-hidden">
+      <div className="max-w-7xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
         <NavBar />
-        <div className="bg-purple-600 py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-white text-center">
-            <FontAwesomeIcon icon={faUsers} className="mr-2" /> إدارة المجموعات
-          </h1>
+        <div className="bg-purple-600 py-6 px-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <FontAwesomeIcon icon={faUsers} className="mr-3 text-3xl" />
+              إدارة المجموعات
+            </h1>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="بحث عن مجموعة..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              />
+              <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-3 text-gray-400" />
+            </div>
+          </div>
         </div>
-
         <div className="p-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">إنشاء مجموعة جديدة</h2>
-          <div className="mb-6 flex flex-col md:flex-row items-center">
-            <input
-              type="text"
-              placeholder="اسم المجموعة"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              className="form-control mb-2 md:mb-0 md:mr-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500"
-            />
-            <button
-              onClick={handleAddGroup}
-              className="bg-purple-600 text-white px-6 py-2 rounded-md shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-            >
-              <FontAwesomeIcon icon={faPlus} className="mr-2" /> إضافة مجموعة
-            </button>
-          </div>
-
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">قائمة المجموعات</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto border-collapse">
-              <thead className="bg-purple-600 text-white">
-                <tr>
-                  <th className="px-6 py-3 border-b-2 border-gray-200">ID</th>
-                  <th className="px-6 py-3 border-b-2 border-gray-200">اسم المجموعة</th>
-                  <th className="px-6 py-3 border-b-2 border-gray-200">عدد المترشحين</th>
-                  <th className="px-6 py-3 border-b-2 border-gray-200">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white">
-                {groups.map((group) => (
-                  <tr key={group.id} className="hover:bg-teal-50">
-                    <td className="px-6 py-4 border-b border-gray-200">{group.id}</td>
-                    <td className="px-6 py-4 border-b border-gray-200">{group.name}</td>
-                    <td className="px-6 py-4 border-b border-gray-200">{group.clients.length}</td>
-                    <td className="px-6 py-4 border-b border-gray-200">
-                      <button
-                        onClick={() => handleShowClientModal(group.id)}
-                        className="bg-blue-600 text-white px-4 py-1 mr-2 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                      >
-                        <FontAwesomeIcon icon={faUserPlus} className="mr-2" /> إضافة مترشح
-                      </button>
-                      <button
-                        onClick={() => handleDeleteGroup(group.id)}
-                        className="bg-red-600 text-white px-4 py-1 rounded-md shadow-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                      >
-                        <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> حذف
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <GroupFilters
+            newGroupName={newGroupName}
+            setNewGroupName={setNewGroupName}
+            handleAddGroup={handleAddGroup}
+          />
+          <GroupTable
+            groups={paginatedGroups}
+            handleShowClientModal={handleShowClientModal}
+            handleDeleteGroup={handleDeleteGroup}
+          />
+          <GroupsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </div>
       </div>
-
       {showClientModal && (
         <ClientModal
           groupId={selectedGroupId}
-          groupClients={groups.find((group) => group.id === selectedGroupId).clients}
+          groupClients={groups.find((group) => group.id === selectedGroupId)?.clients || []}
           allGroups={groups}
           onClose={() => setShowClientModal(false)}
           onSave={handleSaveClients}
@@ -118,4 +113,4 @@ const Groups = () => {
   )
 }
 
-export default Groups
+export default GroupsPage

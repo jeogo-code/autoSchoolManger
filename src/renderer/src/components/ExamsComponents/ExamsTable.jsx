@@ -1,50 +1,52 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 
-const ExamsTable = ({ exams, onEdit, onDelete }) => {
+const ExamsTable = ({ exams, clients, groups, onEdit, onDelete }) => {
+  const getGroupName = (groupId) => {
+    const group = groups.find((g) => g.id === groupId)
+    return group ? group.name : 'غير معروف'
+  }
+
+  const getClientName = (clientId) => {
+    const client = clients.find((c) => c.id === clientId)
+    return client ? `${client.firstName} ${client.lastName}` : 'غير معروف'
+  }
+
   return (
-    <div className="table-responsive table-wrapper-scroll-y my-custom-scrollbar">
+    <div className="overflow-x-auto shadow-md rounded-lg">
       <table className="min-w-full table-auto border-collapse">
         <thead className="bg-yellow-600 text-white">
           <tr>
-            <th className="px-6 py-3 border-b-2 border-gray-200">ID</th>
-            <th className="px-6 py-3 border-b-2 border-gray-200">التاريخ</th>
-            <th className="px-6 py-3 border-b-2 border-gray-200">التوقيت</th>
-            <th className="px-6 py-3 border-b-2 border-gray-200">المجموعة</th>
-            <th className="px-6 py-3 border-b-2 border-gray-200">عدد المترشحين</th>
-            <th className="px-6 py-3 border-b-2 border-gray-200">إجراءات</th>
+            <TableCell>ID</TableCell>
+            <TableCell>التاريخ</TableCell>
+            <TableCell>المجموعة</TableCell>
+            <TableCell>المترشح</TableCell>
+            <TableCell>الوقت</TableCell>
+            <TableCell>الحالة</TableCell>
+            <TableCell>نوع الامتحان</TableCell>
+            <TableCell>إجراءات</TableCell>
           </tr>
         </thead>
         <tbody className="bg-white">
           {exams.length > 0 ? (
             exams.map((exam) => (
-              <tr key={exam.id} className="hover:bg-teal-50">
-                <td className="px-6 py-4 border-b border-gray-200">{exam.id}</td>
-                <td className="px-6 py-4 border-b border-gray-200">{exam.date}</td>
-                <td className="px-6 py-4 border-b border-gray-200">{exam.time}</td>
-                <td className="px-6 py-4 border-b border-gray-200">{exam.group}</td>
-                <td className="px-6 py-4 border-b border-gray-200">{exam.clients.length}</td>
-                <td className="px-6 py-4 border-b border-gray-200">
-                  <button
-                    onClick={() => onEdit(exam)}
-                    className="bg-blue-600 text-white px-4 py-1 mr-2 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                  >
-                    <FontAwesomeIcon icon={faEdit} className="mr-2" /> تعديل
-                  </button>
-                  <button
-                    onClick={() => onDelete(exam.id)}
-                    className="bg-red-600 text-white px-4 py-1 rounded-md shadow-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt} className="mr-2" /> حذف
-                  </button>
-                </td>
-              </tr>
+              <ExamRow
+                key={exam.id}
+                exam={exam}
+                getGroupName={getGroupName}
+                getClientName={getClientName}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="text-center py-4">
-                <div role="alert" className="alert alert-secondary">
-                  <h2 className="text-center">لا توجد امتحانات</h2>
+              <td colSpan="8" className="text-center py-4">
+                <div
+                  role="alert"
+                  className="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-3 rounded"
+                >
+                  <p className="font-bold">لا توجد امتحانات</p>
                 </div>
               </td>
             </tr>
@@ -54,5 +56,62 @@ const ExamsTable = ({ exams, onEdit, onDelete }) => {
     </div>
   )
 }
+
+const TableCell = ({ children }) => (
+  <th className="px-6 py-3 text-right border-b-2 border-gray-200">{children}</th>
+)
+
+const ExamRow = ({ exam, getGroupName, getClientName, onEdit, onDelete }) => {
+  return (
+    <tr className="hover:bg-yellow-50 transition duration-150 ease-in-out">
+      <td className="px-6 py-3 text-right border-b border-gray-200">{exam.id}</td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">{exam.date}</td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">
+        {getGroupName(exam.groupId)}
+      </td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">
+        {getClientName(exam.clientId)}
+      </td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">{exam.time}</td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">{exam.status}</td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">{exam.type}</td>
+      <td className="px-6 py-3 text-right border-b border-gray-200">
+        <div className="flex justify-center items-center gap-5">
+          <ActionButton
+            onClick={() => onEdit(exam)}
+            icon={faEdit}
+            color="blue"
+            tooltip="تعديل"
+            ariaLabel="تعديل الامتحان"
+          />
+          <DeleteButton onDelete={() => onDelete(exam.id)} ariaLabel="حذف الامتحان" />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+const ActionButton = ({ onClick, icon, color, tooltip, ariaLabel }) => (
+  <button
+    onClick={onClick}
+    className={`text-${color}-600 hover:text-${color}-700 focus:outline-none focus:ring-2 focus:ring-${color}-500 focus:ring-offset-2 transition duration-150 ease-in-out p-2 rounded-full bg-${color}-100 hover:bg-${color}-200 shadow-md`}
+    title={tooltip}
+    aria-label={ariaLabel}
+  >
+    <FontAwesomeIcon icon={icon} size="lg" />
+  </button>
+)
+
+const DeleteButton = ({ onDelete, ariaLabel }) => (
+  <button
+    type="button"
+    className="text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out p-2 rounded-full bg-red-100 hover:bg-red-200 shadow-md"
+    title="حذف"
+    onClick={onDelete}
+    aria-label={ariaLabel}
+  >
+    <FontAwesomeIcon icon={faTrashAlt} size="lg" />
+  </button>
+)
 
 export default ExamsTable
