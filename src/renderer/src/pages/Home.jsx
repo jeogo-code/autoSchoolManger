@@ -6,10 +6,90 @@ import {
   faLayerGroup,
   faListAlt,
   faTrafficLight,
-  faCar
+  faCar,
+  faFileAlt,
+  faMoneyBillWave
 } from '@fortawesome/free-solid-svg-icons'
 
 const Home = () => {
+  const cards = [
+    {
+      icon: faUsers,
+      title: 'عدد المترشحين',
+      subtitle: 'Number of Candidates',
+      count: 0,
+      color: 'teal',
+      to: '/candidates'
+    },
+    {
+      icon: faClipboardList,
+      title: 'عدد الامتحانات',
+      subtitle: 'Number of Exams',
+      count: 0,
+      color: 'cyan',
+      to: '/exams'
+    },
+    {
+      icon: faLayerGroup,
+      title: 'عدد المجموعات',
+      subtitle: 'Number of Groups',
+      count: 0,
+      color: 'purple',
+      to: '/groups'
+    },
+    {
+      icon: faListAlt,
+      title: 'الامتحانات',
+      subtitle: 'Exams',
+      count: 0,
+      color: 'yellow',
+      to: '/exams'
+    },
+    {
+      icon: faTrafficLight,
+      title: 'قانون المرور',
+      subtitle: 'Traffic Laws',
+      count: 0,
+      color: 'green',
+      to: '/traffic-laws'
+    },
+    {
+      icon: faCar,
+      title: 'حصص السياقة',
+      subtitle: 'Driving Sessions',
+      count: 0,
+      color: 'blue',
+      to: '/driving-sessions'
+    },
+    {
+      icon: faFileAlt,
+      title: 'ملفات العملاء',
+      subtitle: 'Client Files',
+      count: 0,
+      color: 'pink',
+      to: '/client-files'
+    },
+    {
+      icon: faMoneyBillWave,
+      title: 'الديون',
+      subtitle: 'Debts',
+      count: 0,
+      color: 'red',
+      to: '/debts'
+    }
+  ]
+
+  const buttons = [
+    { to: '/register', label: 'تسجيل عميل جديد', color: 'teal' },
+    { to: '/clients', label: 'أرشيف العملاء', color: 'cyan' },
+    { to: '/groups', label: 'المجموعات', color: 'purple' },
+    { to: '/exams', label: 'الامتحانات', color: 'yellow' },
+    { to: '/traffic-laws', label: 'قانون المرور', color: 'green' },
+    { to: '/driving-sessions', label: 'حصص السياقة', color: 'blue' },
+    { to: '/client-files', label: 'ملفات العملاء', color: '#FFFFE0' },
+    { to: '/debts', label: 'الديون', color: 'red' }
+  ]
+
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-teal-50 to-cyan-100">
       <div className="container mx-auto px-4 py-12">
@@ -17,107 +97,42 @@ const Home = () => {
           مرحبا بك في نظام ادارة العملاء الاحترافي
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faUsers} className="h-16 w-16 text-teal-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">عدد المترشحين</div>
-              <p className="text-teal-700">Number of Candidates</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faClipboardList} className="h-16 w-16 text-cyan-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">عدد الامتحانات</div>
-              <p className="text-teal-700">Number of Exams</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faLayerGroup} className="h-16 w-16 text-purple-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">عدد المجموعات</div>
-              <p className="text-teal-700">Number of Groups</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faListAlt} className="h-16 w-16 text-yellow-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">الامتحانات</div>
-              <p className="text-teal-700">Exams</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faTrafficLight} className="h-16 w-16 text-green-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">قانون المرور</div>
-              <p className="text-teal-700">Traffic Laws</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
-
-          <div className="p-6 bg-white rounded-lg shadow-lg flex items-center">
-            <div className="shrink-0 ml-4">
-              <FontAwesomeIcon icon={faCar} className="h-16 w-16 text-blue-500" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-teal-900">حصص السياقة</div>
-              <p className="text-teal-700">Driving Sessions</p>
-              <span className="block mt-1 text-3xl text-teal-800">0</span>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {cards.map((card, index) => (
+            <Link key={index} to={card.to} className="block">
+              <div
+                className={`p-6 bg-${card.color}-100 rounded-xl shadow-lg flex items-center transition-transform hover:scale-105 cursor-pointer`}
+              >
+                <div className="shrink-0 ml-4">
+                  <FontAwesomeIcon
+                    icon={card.icon}
+                    className={`h-12 w-12 text-${card.color}-500`}
+                  />
+                </div>
+                <div>
+                  <div className={`text-xl font-semibold text-${card.color}-900`}>{card.title}</div>
+                  <p className={`text-${card.color}-700 text-sm`}>{card.subtitle}</p>
+                  <span className={`block mt-1 text-2xl font-bold text-${card.color}-800`}>
+                    {card.count}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-teal-800 mb-6 text-center">الخيارات</h2>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/register">
-              <button className="bg-teal-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                تسجيل عميل جديد
-              </button>
-            </Link>
-            <Link to="/clients">
-              <button className="bg-cyan-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                أرشيف العملاء
-              </button>
-            </Link>
-            <Link to="/groups">
-              <button className="bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                المجموعات
-              </button>
-            </Link>
-            <Link to="/exams">
-              <button className="bg-yellow-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                الامتحانات
-              </button>
-            </Link>
-            <Link to="/traffic-laws">
-              <button className="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                قانون المرور
-              </button>
-            </Link>
-            <Link to="/driving-sessions">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                حصص السياقة
-              </button>
-            </Link>
+            {buttons.map((button, index) => (
+              <Link key={index} to={button.to}>
+                <button
+                  className={`bg-${button.color}-600 text-${button.color}-100 px-6 py-3 rounded-full shadow-lg hover:bg-${button.color}-700 focus:outline-none focus:ring-2 focus:ring-${button.color}-500 focus:ring-offset-2 transition duration-150 ease-in-out`}
+                >
+                  {button.label}
+                </button>
+              </Link>
+            ))}
           </div>
         </div>
       </div>

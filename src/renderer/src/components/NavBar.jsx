@@ -1,48 +1,39 @@
 import { Link } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faHome,
+  faUserPlus,
+  faUsers,
+  faLayerGroup,
+  faClipboardList,
+  faBook,
+  faCar
+} from '@fortawesome/free-solid-svg-icons'
+
+const navItems = [
+  { path: '/', icon: faHome, text: 'الصفحة الرئيسية', color: 'bg-teal-600' },
+  { path: '/register', icon: faUserPlus, text: 'تسجيل عميل جديد', color: 'bg-teal-600' },
+  { path: '/clients', icon: faUsers, text: 'أرشيف العملاء', color: 'bg-cyan-600' },
+  { path: '/groups', icon: faLayerGroup, text: 'المجموعات', color: 'bg-purple-600' },
+  { path: '/exams', icon: faClipboardList, text: 'الامتحانات', color: 'bg-yellow-600' },
+  { path: '/traffic-laws', icon: faBook, text: 'قانون المرور', color: 'bg-green-600' },
+  { path: '/driving-sessions', icon: faCar, text: 'حصص السياقة', color: 'bg-blue-600' }
+]
 
 const NavBar = () => {
   return (
     <nav className="bg-white shadow-lg py-4">
-      <div className="container mx-auto flex justify-around items-center">
-        <Link to="/" className="text-teal-800 text-lg font-bold hover:underline">
-          الصفحة الرئيسية
-        </Link>
-        <Link
-          to="/register"
-          className="bg-teal-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          تسجيل عميل جديد
-        </Link>
-        <Link
-          to="/clients"
-          className="bg-cyan-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          أرشيف العملاء
-        </Link>
-        <Link
-          to="/groups"
-          className="bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          المجموعات
-        </Link>
-        <Link
-          to="/exams"
-          className="bg-yellow-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          الامتحانات
-        </Link>
-        <Link
-          to="/traffic-laws"
-          className="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          قانون المرور
-        </Link>
-        <Link
-          to="/driving-sessions"
-          className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          حصص السياقة
-        </Link>
+      <div className="container mx-auto flex flex-wrap justify-center items-center gap-4">
+        {navItems.map((item, index) => (
+          <Link
+            key={index}
+            to={item.path}
+            className={`${item.color} text-white px-4 py-2 rounded-full shadow-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${item.color.split('-')[1]} transition duration-150 ease-in-out flex items-center space-x-2 rtl:space-x-reverse`}
+          >
+            <FontAwesomeIcon icon={item.icon} />
+            <span>{item.text}</span>
+          </Link>
+        ))}
       </div>
     </nav>
   )

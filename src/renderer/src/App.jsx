@@ -6,6 +6,8 @@ import Groups from './pages/Groups'
 import Exams from './pages/Exams'
 import TrafficLaws from './pages/TrafficLaws'
 import DrivingSessions from './pages/DrivingSessions'
+import ClientFiles from './pages/ClientFiles'
+import Debts from './pages/Debts'
 
 const App = () => {
   return (
@@ -18,6 +20,8 @@ const App = () => {
         <Route path="/exams" element={<Exams />} />
         <Route path="/traffic-laws" element={<TrafficLaws />} />
         <Route path="/driving-sessions" element={<DrivingSessions />} />
+        <Route path="/client-files" element={<ClientFiles />} />
+        <Route path="/debts" element={<Debts />} />
       </Routes>
     </Router>
   )
