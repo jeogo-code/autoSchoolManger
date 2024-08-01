@@ -17,14 +17,14 @@ const ClientsList = () => {
     setClients([
       {
         id: 1,
-        photo: '/path/to/photo1.jpg',
+        photo: '/path/to/photo1.jpg', // URL to the client's photo; if empty, display a placeholder
         lastname: 'قنفود',
         firstname: 'أسامة',
         registrationDate: '2024-07-24',
         phone: '0644394032',
         group: 'بدون مجموعة',
         identifier: '12345',
-        gender: '1',
+        gender: '1', // '1' for 'السيد', '2' for 'السيدة', '3' for 'الأنسة'
         prenom_fr: 'Oussama',
         nom_fr: 'Kenfoud',
         date_naissance: '1990-05-14',
@@ -33,8 +33,11 @@ const ClientsList = () => {
         blood_type: 'O+',
         id_card_number: '123456789',
         adresse: 'حي بئر مراد رايس، الجزائر',
-        image: ''
+        date_insert: '2024-07-20', // Date of file submission
+        date_inscription: '2024-07-22', // Registration date
+        amount_paid: 1000 // Amount paid
       }
+
       // Additional sample clients
     ])
   }, [])

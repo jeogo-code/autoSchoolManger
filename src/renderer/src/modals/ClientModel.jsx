@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faTimes,
@@ -9,12 +9,17 @@ import {
   faTint,
   faIdCard,
   faCamera,
-  faVenusMars
+  faVenusMars,
+  faMoneyBillWave,
+  faCalendar
 } from '@fortawesome/free-solid-svg-icons'
 
-const ClientModel = React.memo(({ client, onClose, onSave }) => {
+const ClientModel = ({ client, onClose, onSave }) => {
   const [editedClient, setEditedClient] = useState(client)
   const [isUnknownBirthDate, setIsUnknownBirthDate] = useState(client.unknown_birth_date || false)
+  const [imagePreview, setImagePreview] = useState(
+    client.image ? URL.createObjectURL(client.image) : null
+  )
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target
@@ -31,66 +36,81 @@ const ClientModel = React.memo(({ client, onClose, onSave }) => {
     }))
   }, [])
 
+  const handleImageChange = useCallback((e) => {
+    const file = e.target.files[0]
+    setEditedClient((prev) => ({ ...prev, image: file }))
+    setImagePreview(file ? URL.createObjectURL(file) : null)
+  }, [])
+
   const handleSave = useCallback(() => {
     onSave(editedClient)
     onClose()
   }, [editedClient, onSave, onClose])
 
-  const InputField = useCallback(({ icon, label, id, type = 'text', value, ...props }) => (
-    <div className="relative mb-6">
-      <label htmlFor={id} className="block text-lg font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="relative rounded-lg shadow-sm">
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <FontAwesomeIcon icon={icon} className="h-6 w-6 text-gray-400" />
+  const InputField = useCallback(
+    ({ icon, label, id, type = 'text', value, ...props }) => (
+      <div className="relative mb-6">
+        <label htmlFor={id} className="block text-lg font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+        <div className="relative rounded-lg shadow-sm">
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <FontAwesomeIcon icon={icon} className="h-6 w-6 text-gray-400" />
+          </div>
+          <input
+            type={type}
+            name={id}
+            id={id}
+            value={value}
+            onChange={handleChange}
+            className="block w-full pr-12 py-3 text-lg border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
+            {...props}
+          />
         </div>
-        <input
-          type={type}
-          name={id}
-          id={id}
-          value={value}
-          onChange={handleChange}
-          className="block w-full pr-12 py-3 text-lg border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
-          {...props}
-        />
       </div>
-    </div>
-  ), [handleChange])
+    ),
+    [handleChange]
+  )
 
-  const SelectField = useCallback(({ icon, label, id, options, value, ...props }) => (
-    <div className="relative mb-6">
-      <label htmlFor={id} className="block text-lg font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="relative rounded-lg shadow-sm">
-        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-          <FontAwesomeIcon icon={icon} className="h-6 w-6 text-gray-400" />
+  const SelectField = useCallback(
+    ({ icon, label, id, options, value, ...props }) => (
+      <div className="relative mb-6">
+        <label htmlFor={id} className="block text-lg font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+        <div className="relative rounded-lg shadow-sm">
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <FontAwesomeIcon icon={icon} className="h-6 w-6 text-gray-400" />
+          </div>
+          <select
+            name={id}
+            id={id}
+            value={value}
+            onChange={handleChange}
+            className="block w-full pr-12 py-3 text-lg border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
+            {...props}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          name={id}
-          id={id}
-          value={value}
-          onChange={handleChange}
-          className="block w-full pr-12 py-3 text-lg border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
-          {...props}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
       </div>
-    </div>
-  ), [handleChange])
+    ),
+    [handleChange]
+  )
 
-  const Section = useCallback(({ title, children }) => (
-    <div className="mb-10">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">{title}</h3>
-      {children}
-    </div>
-  ), [])
+  const Section = useCallback(
+    ({ title, children }) => (
+      <div className="mb-10">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">{title}</h3>
+        {children}
+      </div>
+    ),
+    []
+  )
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
@@ -235,33 +255,69 @@ const ClientModel = React.memo(({ client, onClose, onSave }) => {
           <Section title="الصورة الشخصية">
             <div className="relative">
               <label htmlFor="image" className="block text-lg font-medium text-gray-700 mb-2">
-                اختيار الصورة
+                تحميل صورة
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-                <div className="space-y-1 text-center">
-                  <FontAwesomeIcon icon={faCamera} className="mx-auto h-16 w-16 text-gray-400" />
-                  <div className="flex text-lg text-gray-600">
-                    <label
-                      htmlFor="image"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-teal-600 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500"
-                    >
-                      <span>تحميل ملف</span>
-                      <input
-                        id="image"
-                        name="image"
-                        type="file"
-                        className="sr-only"
-                        onChange={(e) =>
-                          handleChange({ target: { name: 'image', value: e.target.files[0] } })
-                        }
-                      />
-                    </label>
-                    <p className="pr-1">أو اسحب وأفلت</p>
+              <div className="flex items-center space-x-4">
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                  <div className="space-y-1 text-center">
+                    <FontAwesomeIcon icon={faCamera} className="mx-auto h-16 w-16 text-gray-400" />
+                    <div className="flex text-lg text-gray-600">
+                      <label
+                        htmlFor="image"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-teal-600 hover:text-teal-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-teal-500"
+                      >
+                        <span>تحميل صورة</span>
+                        <input
+                          id="image"
+                          name="image"
+                          type="file"
+                          className="sr-only"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                      <p className="pr-1">أو اسحب وأفلت</p>
+                    </div>
+                    <p className="text-sm text-gray-500">PNG, JPG, GIF حتى 10 ميغابايت</p>
                   </div>
-                  <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
                 </div>
+                {imagePreview && (
+                  <div className="mt-1 w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
               </div>
             </div>
+          </Section>
+
+          <Section title="معلومات التسجيل">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                icon={faCalendar}
+                label="تاريخ إيداع الملف"
+                id="date_insert"
+                type="date"
+                value={editedClient.date_insert}
+              />
+              <InputField
+                icon={faCalendar}
+                label="تاريخ التسجيل"
+                id="date_inscription"
+                type="date"
+                value={editedClient.date_inscription}
+              />
+            </div>
+          </Section>
+
+          <Section title="معلومات الدفع">
+            <InputField
+              icon={faMoneyBillWave}
+              label="المبلغ المدفوع"
+              id="amount_paid"
+              type="number"
+              placeholder="أدخل المبلغ المدفوع"
+              value={editedClient.amount_paid}
+              onChange={(e) => handleChange(e)}
+            />
           </Section>
         </form>
         <div className="sticky bottom-0 bg-gray-50 px-8 py-6 border-t border-gray-200">
@@ -278,6 +334,6 @@ const ClientModel = React.memo(({ client, onClose, onSave }) => {
       </div>
     </div>
   )
-})
+}
 
 export default ClientModel

@@ -3,14 +3,30 @@ import NavBar from '../components/NavBar'
 
 const RegisterNewClient = () => {
   const [isUnknownBirthDate, setIsUnknownBirthDate] = useState(false)
+  const [amountPaid, setAmountPaid] = useState(0)
 
   // Handle checkbox change for "Unknown Birth Date"
   const handleUnknownBirthDateChange = (e) => {
     setIsUnknownBirthDate(e.target.checked)
   }
 
+  // Handle change in amount paid
+  const handleAmountPaidChange = (e) => {
+    setAmountPaid(e.target.value)
+  }
+
   // FormField Component
-  const FormField = ({ label, id, type = 'text', placeholder, options, required = false }) => {
+  const FormField = ({
+    label,
+    id,
+    type = 'text',
+    placeholder,
+    options,
+    required = false,
+    disabled = false,
+    value = '',
+    onChange = null
+  }) => {
     const inputClasses = `
       mt-2 block w-full rounded-lg border-gray-300 shadow-sm
       focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50
@@ -22,7 +38,14 @@ const RegisterNewClient = () => {
       switch (type) {
         case 'select':
           return (
-            <select id={id} name={id} className={inputClasses} required={required}>
+            <select
+              id={id}
+              name={id}
+              className={inputClasses}
+              required={required}
+              value={value}
+              onChange={onChange}
+            >
               {options.map((option, index) => (
                 <option key={index} value={option.value}>
                   {option.label}
@@ -49,7 +72,9 @@ const RegisterNewClient = () => {
               placeholder={placeholder}
               className={inputClasses}
               required={required}
-              disabled={id === 'date_naissance' && isUnknownBirthDate}
+              disabled={disabled}
+              value={value}
+              onChange={onChange}
             />
           )
       }
@@ -325,6 +350,19 @@ const RegisterNewClient = () => {
                   placeholder="المعرف الخاص بالمترشح"
                 />,
                 <FormFileInput key="image" label="اختيار الصورة" id="image" />
+              ])}
+
+              {renderSection('معلومات الدفع', [
+                <FormField
+                  key="amount_paid"
+                  label="المبلغ المدفوع"
+                  id="amount_paid"
+                  type="number"
+                  placeholder="أدخل المبلغ المدفوع"
+                  required={true}
+                  value={amountPaid}
+                  onChange={handleAmountPaidChange}
+                />
               ])}
 
               <div className="flex justify-center space-x-4 mt-8">
