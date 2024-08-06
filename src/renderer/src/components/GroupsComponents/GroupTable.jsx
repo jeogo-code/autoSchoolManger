@@ -19,7 +19,7 @@ const GroupTable = ({ groups, handleShowClientModal, handleDeleteGroup }) => {
           {groups.length > 0 ? (
             groups.map((group) => (
               <GroupRow
-                key={group.id}
+                key={group._id} // Use _id as the unique key
                 group={group}
                 handleShowClientModal={handleShowClientModal}
                 handleDeleteGroup={handleDeleteGroup}
@@ -48,24 +48,26 @@ const TableCell = ({ children }) => (
 )
 
 const GroupRow = ({ group, handleShowClientModal, handleDeleteGroup }) => {
+  const clientCount = group.clientIds?.length || 0
+
   return (
     <tr className="hover:bg-teal-50 transition duration-150 ease-in-out">
-      <td className="px-6 py-3 border-b border-gray-200">{group.id}</td>
+      <td className="px-6 py-3 border-b border-gray-200">{group._id}</td>
       <td className="px-6 py-3 border-b border-gray-200">{group.name}</td>
       <td className="px-6 py-3 border-b border-gray-200">
         <span className="bg-teal-100 text-teal-800 py-1 px-3 rounded-full text-sm font-medium">
-          {group.clients.length}
+          {clientCount}
         </span>
       </td>
       <td className="px-6 py-3 border-b border-gray-200">
         <div className="flex justify-center items-center gap-5">
           <ActionButton
-            onClick={() => handleShowClientModal(group.id)}
+            onClick={() => handleShowClientModal(group._id)}
             icon={faUserPlus}
             color="blue"
             tooltip="إضافة مترشح"
           />
-          <DeleteButton onDelete={() => handleDeleteGroup(group.id)} />
+          <DeleteButton onDelete={() => handleDeleteGroup(group._id)} />
         </div>
       </td>
     </tr>
@@ -92,5 +94,4 @@ const DeleteButton = ({ onDelete }) => (
     <FontAwesomeIcon icon={faTrashAlt} size="lg" />
   </button>
 )
-
 export default GroupTable

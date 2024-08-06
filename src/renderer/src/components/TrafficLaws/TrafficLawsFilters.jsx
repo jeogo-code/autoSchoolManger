@@ -31,7 +31,7 @@ const TrafficLawsFilters = ({ onAddLesson, groups, onFilter }) => {
               >
                 <option value="">اختر مجموعة...</option>
                 {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
+                  <option key={group._id} value={group._id}>
                     {group.name}
                   </option>
                 ))}

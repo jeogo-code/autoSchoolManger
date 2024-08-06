@@ -14,14 +14,15 @@ const ClientModal = ({ groupId, groupClients, allGroups, onClose, onSave }) => {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    // Fetch clients from API or state management
-    setClients([
-      { id: 1, name: 'اسامة قنفود' },
-      { id: 2, name: 'محمد علي' },
-      { id: 3, name: 'فاطمة الزهراء' },
-      { id: 4, name: 'عبد الرحمن محمود' },
-      { id: 5, name: 'زينب أحمد' }
-    ])
+    const fetchClients = async () => {
+      try {
+        const clientsData = await window.api.getAllClients()
+        setClients(clientsData)
+      } catch (error) {
+        console.error('Failed to fetch clients:', error)
+      }
+    }
+    fetchClients()
   }, [])
 
   const handleSelectClient = (clientId) => {
@@ -39,7 +40,7 @@ const ClientModal = ({ groupId, groupClients, allGroups, onClose, onSave }) => {
 
   const getClientGroup = (clientId) => {
     for (let group of allGroups) {
-      if (group.clients.includes(clientId)) {
+      if (group.clientIds && group.clientIds.includes(clientId)) {
         return group.name
       }
     }
@@ -77,22 +78,23 @@ const ClientModal = ({ groupId, groupClients, allGroups, onClose, onSave }) => {
         <div className="mt-4 max-h-96 overflow-y-auto">
           <ul className="space-y-2">
             {filteredClients.map((client) => {
-              const clientGroup = getClientGroup(client.id)
+              const clientGroup = getClientGroup(client._id)
               const isClientInAnotherGroup =
-                clientGroup && clientGroup !== allGroups.find((group) => group.id === groupId).name
+                clientGroup &&
+                clientGroup !== allGroups.find((group) => group._id === groupId)?.name
               return (
                 <li
-                  key={client.id}
+                  key={client._id}
                   className="flex items-center justify-between border p-3 rounded-md hover:bg-gray-50 transition duration-150"
                 >
                   <span className="font-medium">{client.name}</span>
                   <button
-                    onClick={() => handleSelectClient(client.id)}
+                    onClick={() => handleSelectClient(client._id)}
                     disabled={isClientInAnotherGroup}
                     className={`px-4 py-2 rounded-md shadow-lg transition duration-150 ease-in-out flex items-center ${
                       isClientInAnotherGroup
                         ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                        : selectedClients.includes(client.id)
+                        : selectedClients.includes(client._id)
                           ? 'bg-red-600 text-white hover:bg-red-700'
                           : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
@@ -101,7 +103,7 @@ const ClientModal = ({ groupId, groupClients, allGroups, onClose, onSave }) => {
                       icon={
                         isClientInAnotherGroup
                           ? faUserCheck
-                          : selectedClients.includes(client.id)
+                          : selectedClients.includes(client._id)
                             ? faUserMinus
                             : faUserPlus
                       }
@@ -109,7 +111,7 @@ const ClientModal = ({ groupId, groupClients, allGroups, onClose, onSave }) => {
                     />
                     {isClientInAnotherGroup
                       ? `موجود في ${clientGroup}`
-                      : selectedClients.includes(client.id)
+                      : selectedClients.includes(client._id)
                         ? 'إزالة'
                         : 'إضافة'}
                   </button>

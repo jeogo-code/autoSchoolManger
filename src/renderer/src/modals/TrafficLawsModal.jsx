@@ -8,8 +8,25 @@ import {
   faSearch,
   faClock
 } from '@fortawesome/free-solid-svg-icons'
+import { v4 as uuidv4 } from 'uuid'
 
-const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }) => {
+const lessonsList = [
+  'الإشارات الطرقية', 'لوحات الخطر', 'اللوحات ذات الإشارات البسيطة',
+  'اشارات اثبات الطريق', 'مراجعة عامة وتمارين', 'الاشارات المتعلقة بملتقيات الطرق ونظم الاولوية',
+  'اللويحات', 'الاشارات الضوئية واشارات اعوان والنظام العام', 'الاشارات الافقية',
+  'ملتقيات الطرق', 'المعالم', 'حالات سحب رخص السياقة', 'الطريق السيار',
+  'وقاية وامن الطرقات', 'السياقة الوقائية اثناء الشتاء', 'إشكال التعارض',
+  'المركبة', 'البيئة الطرقية', 'علم الحوادث', 'الإسعافية'
+]
+
+const TrafficLawsModal = ({
+  session,
+  onClose,
+  onSave,
+  groups = [],
+  clients = [],
+  existingLessons = []
+}) => {
   const [formData, setFormData] = useState({
     date: session?.date || '',
     selectedGroup: '',
@@ -17,126 +34,79 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
     lessons: session?.lessons || [],
     time: ''
   })
-
   const [availableClients, setAvailableClients] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredClients, setFilteredClients] = useState([])
 
-  const lessonsList = [
-    'الإشارات الطرقية',
-    'لوحات الخطر',
-    'اللوحات ذات الإشارات البسيطة',
-    'اشارات اثبات الطريق',
-    'مراجعة عامة وتمارين',
-    'الاشارات المتعلقة بملتقيات الطرق ونظم الاولوية',
-    'اللويحات',
-    'الاشارات الضوئية واشارات اعوان والنظام العام',
-    'الاشارات الافقية',
-    'ملتقيات الطرق',
-    'المعالم',
-    'حالات سحب رخص السياقة',
-    'الطريق السيار',
-    'وقاية وامن الطرقات',
-    'السياقة الوقائية اثناء الشتاء',
-    'إشكال التعارض',
-    'المركبة',
-    'البيئة الطرقية',
-    'علم الحوادث',
-    'الإسعافية'
-  ]
-
   useEffect(() => {
-    if (formData.selectedGroup) {
-      const selectedGroup = groups.find((group) => group.id === parseInt(formData.selectedGroup))
-      setAvailableClients(
-        selectedGroup
-          ? selectedGroup.clients.map((id) => clients.find((client) => client.id === id))
-          : []
-      )
-    } else {
-      setAvailableClients(clients)
-    }
+    const selectedGroup = groups.find(g => g._id === formData.selectedGroup)
+    setAvailableClients(
+      selectedGroup ? selectedGroup.clientIds.map(id => clients.find(c => c._id === id)) : clients
+    )
   }, [formData.selectedGroup, groups, clients])
 
   useEffect(() => {
-    const filtered = availableClients.filter((client) =>
-      client?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    setFilteredClients(filtered)
-  }, [searchTerm, availableClients])
+    const clientsWithLessons = new Set(existingLessons.map(lesson => lesson.clientID))
+    setFilteredClients(availableClients.filter(client => client && !clientsWithLessons.has(client._id)))
+  }, [availableClients, existingLessons])
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleGroupChange = (e) => {
-    const groupId = e.target.value
-    setFormData((prev) => ({
-      ...prev,
-      selectedGroup: groupId,
-      clients: [] // Reset clients when changing the group
-    }))
-  }
-
+  const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  const handleGroupChange = (e) => setFormData(prev => ({ ...prev, selectedGroup: e.target.value, clients: [] }))
   const handleClientAction = (action, clientId) => {
-    if (action === 'add') {
-      const client = availableClients.find((c) => c.id === parseInt(clientId))
-      if (client && !formData.clients.some((c) => c.id === client.id)) {
-        setFormData((prev) => ({
-          ...prev,
-          clients: [...prev.clients, { ...client, time: '', checkIn: '' }]
-        }))
-      }
+    const client = availableClients.find(c => c._id === clientId)
+    if (action === 'add' && client && !formData.clients.some(c => c._id === client._id)) {
+      setFormData(prev => ({ ...prev, clients: [...prev.clients, { ...client, checkIn: formData.time }] }))
     } else if (action === 'remove') {
-      setFormData((prev) => ({
-        ...prev,
-        clients: prev.clients.filter((client) => client.id !== clientId)
-      }))
+      setFormData(prev => ({ ...prev, clients: prev.clients.filter(c => c._id !== clientId) }))
     }
   }
-
-  const handleClientTimeChange = (clientId, field, value) => {
-    setFormData((prev) => ({
+  const handleClientTimeChange = (clientId, value) => {
+    setFormData(prev => ({
       ...prev,
-      clients: prev.clients.map((client) =>
-        client.id === clientId ? { ...client, [field]: value } : client
-      )
+      clients: prev.clients.map(client => client._id === clientId ? { ...client, checkIn: value } : client)
     }))
   }
-
   const handleLessonChange = (lesson) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      lessons: prev.lessons.includes(lesson)
-        ? prev.lessons.filter((item) => item !== lesson)
-        : [...prev.lessons, lesson]
+      lessons: prev.lessons.includes(lesson) ? prev.lessons.filter(item => item !== lesson) : [...prev.lessons, lesson]
     }))
   }
-
   const handleSelectAllLessons = () => {
-    if (formData.lessons.length === lessonsList.length) {
-      setFormData((prev) => ({ ...prev, lessons: [] }))
-    } else {
-      setFormData((prev) => ({ ...prev, lessons: lessonsList }))
-    }
+    setFormData(prev => ({ ...prev, lessons: formData.lessons.length === lessonsList.length ? [] : lessonsList }))
+  }
+
+  const formatTime = (time) => {
+    const [hour, minute] = time.split(':').map(Number)
+    const period = hour >= 12 ? 'PM' : 'AM'
+    const formattedHour = hour % 12 || 12
+    return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const updatedClients = formData.clients.map((client) => ({
-      ...client,
-      groupId: groups.find((g) => g.clients.includes(client.id))?.id
-    }))
-    onSave({ ...formData, clients: updatedClients })
-    onClose()
+    try {
+      const lessonData = formData.clients.map(client => ({
+        _id: session?._id || uuidv4(),
+        clientID: client._id,
+        date: formData.date,
+        time: formatTime(client.checkIn),
+        lessons: formData.lessons,
+        type: 'lesson'
+      }))
+      if (!lessonData.length) throw new Error('No clients selected for the lesson.')
+      onSave(lessonData)
+      onClose()
+    } catch (error) {
+      alert(error.message)
+    }
   }
 
   const handleSetAllTimes = () => {
     if (formData.time) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        clients: prev.clients.map((client) => ({ ...client, checkIn: formData.time }))
+        clients: prev.clients.map(client => ({ ...client, checkIn: formData.time }))
       }))
     }
   }
@@ -173,10 +143,8 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
               >
                 <option value="">كل المجموعات</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
+                {groups.map(group => (
+                  <option key={group._id} value={group._id}>{group.name}</option>
                 ))}
               </select>
               <div className="flex items-center space-x-2">
@@ -197,6 +165,7 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
               </div>
             </div>
           </div>
+
           {/* Attendance Section */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">الحضور والغياب</h3>
@@ -222,13 +191,13 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
                 <ul className="bg-gray-50 rounded-lg shadow-inner overflow-y-auto max-h-80 divide-y divide-gray-200">
                   {formData.clients.map((client) => (
                     <li
-                      key={client.id}
+                      key={client._id}
                       className="flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
                     >
                       <div>
-                        <span className="font-medium text-gray-800">{client.name}</span>
+                        <span className="font-medium text-gray-800">{client.nom}</span>
                         <span className="text-sm text-gray-500 block">
-                          {groups.find((g) => g.clients.some((c) => c.id === client.id))?.name}
+                          {groups.find((g) => g._id === client.groupId)?.name || 'غير معروف'}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -236,13 +205,13 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
                           type="time"
                           value={client.checkIn}
                           onChange={(e) =>
-                            handleClientTimeChange(client.id, 'checkIn', e.target.value)
+                            handleClientTimeChange(client._id, e.target.value)
                           }
                           className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         />
                         <button
                           type="button"
-                          onClick={() => handleClientAction('remove', client.id)}
+                          onClick={() => handleClientAction('remove', client._id)}
                           className="text-red-500 hover:text-red-700 transition-colors"
                         >
                           <FontAwesomeIcon icon={faTrashAlt} />
@@ -260,22 +229,24 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
                   {filteredClients
                     .filter(
                       (client) =>
-                        !formData.clients.some((selectedClient) => selectedClient.id === client.id)
+                        !formData.clients.some(
+                          (selectedClient) => selectedClient._id === client._id
+                        )
                     )
                     .map((client) => (
                       <li
-                        key={client.id}
+                        key={client._id}
                         className="flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
                       >
                         <div>
-                          <span className="font-medium text-gray-800">{client.name}</span>
+                          <span className="font-medium text-gray-800">{client.nom}</span>
                           <span className="text-sm text-gray-500 block">
-                            {groups.find((g) => g.clients.some((c) => c.id === client.id))?.name}
+                            {groups.find((g) => g._id === client.groupId)?.name || 'غير معروف'}
                           </span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleClientAction('add', client.id)}
+                          onClick={() => handleClientAction('add', client._id)}
                           className="text-green-500 hover:text-green-700 transition-colors"
                         >
                           <FontAwesomeIcon icon={faPlus} />
@@ -286,6 +257,7 @@ const TrafficLawsModal = ({ session, onClose, onSave, groups, clients, lessons }
               </div>
             </div>
           </div>
+
           {/* Lessons Section */}
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">الدروس</h3>

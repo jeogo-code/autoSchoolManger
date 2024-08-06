@@ -96,7 +96,6 @@ const Home = () => {
         <h1 className="text-5xl font-extrabold text-teal-800 mb-12 text-center">
           مرحبا بك في نظام ادارة العملاء الاحترافي
         </h1>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {cards.map((card, index) => (
             <Link key={index} to={card.to} className="block">

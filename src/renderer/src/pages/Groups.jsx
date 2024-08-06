@@ -1,34 +1,52 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUsers, faSearch } from '@fortawesome/free-solid-svg-icons'
 import NavBar from '../components/NavBar'
 import GroupTable from '../components/GroupsComponents/GroupTable'
 import GroupFilters from '../components/GroupsComponents/GroupFilters'
 import ClientModal from '../Modals/ClientModal'
-import GroupsPagination from '../components/GroupsComponents/GroupsPagination'
 
 const GroupsPage = () => {
-  const [groups, setGroups] = useState([
-    { id: 1, name: 'مجموعة 01', clients: [1, 2, 3] },
-    { id: 2, name: 'مجموعة 02', clients: [] },
-    { id: 3, name: 'مجموعة 03', clients: [4, 5] }
-  ])
+  const [groups, setGroups] = useState([])
   const [newGroupName, setNewGroupName] = useState('')
   const [selectedGroupId, setSelectedGroupId] = useState(null)
   const [showClientModal, setShowClientModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const groupsPerPage = 2
 
-  const handleAddGroup = () => {
-    if (newGroupName.trim()) {
-      setGroups([...groups, { id: groups.length + 1, name: newGroupName, clients: [] }])
-      setNewGroupName('')
+  useEffect(() => {
+    fetchGroups()
+  }, [])
+
+  const fetchGroups = async () => {
+    try {
+      const groupData = await window.api.getAllGroups()
+      setGroups(groupData || [])
+    } catch (error) {
+      console.error('Failed to fetch groups:', error)
     }
   }
 
-  const handleDeleteGroup = (id) => {
-    setGroups(groups.filter((group) => group.id !== id))
+  const handleAddGroup = async () => {
+    if (newGroupName.trim()) {
+      try {
+        await window.api.addGroup({ name: newGroupName, description: '' })
+        setNewGroupName('')
+        fetchGroups()
+      } catch (error) {
+        console.error('Failed to create group:', error)
+      }
+    } else {
+      console.error('Group name is required')
+    }
+  }
+
+  const handleDeleteGroup = async (id) => {
+    try {
+      await window.api.deleteGroup(id)
+      fetchGroups()
+    } catch (error) {
+      console.error('Failed to delete group:', error)
+    }
   }
 
   const handleShowClientModal = (groupId) => {
@@ -36,26 +54,37 @@ const GroupsPage = () => {
     setShowClientModal(true)
   }
 
-  const handleSaveClients = (groupId, selectedClients) => {
-    setGroups(
-      groups.map((group) => (group.id === groupId ? { ...group, clients: selectedClients } : group))
-    )
+  const handleSaveClients = async (groupId, selectedClients) => {
+    try {
+      // Update group in the database
+      await window.api.updateGroup(groupId, selectedClients)
+
+      // Fetch all clients to update their groupId
+      const allClients = await window.api.getAllClients()
+
+      // Update the groupId for the selected clients
+      const updatedClients = allClients.map((client) => {
+        if (selectedClients.includes(client._id)) {
+          return { ...client, groupId }
+        } else if (client.groupId === groupId) {
+          return { ...client, groupId: '' }
+        }
+        return client
+      })
+
+      // Update clients in the database
+      await Promise.all(updatedClients.map((client) => window.api.updateClient(client)))
+
+      fetchGroups()
+      setShowClientModal(false)
+    } catch (error) {
+      console.error('Failed to update group:', error)
+    }
   }
 
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  const paginatedGroups = filteredGroups.slice(
-    (currentPage - 1) * groupsPerPage,
-    currentPage * groupsPerPage
-  )
-
-  const totalPages = Math.ceil(filteredGroups.length / groupsPerPage)
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page)
-  }
 
   return (
     <div
@@ -89,21 +118,16 @@ const GroupsPage = () => {
             handleAddGroup={handleAddGroup}
           />
           <GroupTable
-            groups={paginatedGroups}
+            groups={filteredGroups}
             handleShowClientModal={handleShowClientModal}
             handleDeleteGroup={handleDeleteGroup}
-          />
-          <GroupsPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
           />
         </div>
       </div>
       {showClientModal && (
         <ClientModal
           groupId={selectedGroupId}
-          groupClients={groups.find((group) => group.id === selectedGroupId)?.clients || []}
+          groupClients={groups.find((group) => group._id === selectedGroupId)?.clientIds || []}
           allGroups={groups}
           onClose={() => setShowClientModal(false)}
           onSave={handleSaveClients}

@@ -3,65 +3,69 @@ import NavBar from '../components/NavBar'
 import Header from '../components/ClientsComponents/Header'
 import SearchBar from '../components/ClientsComponents/SearchBar'
 import ClientTable from '../components/ClientsComponents/ClientTable'
-import Pagination from '../components/ClientsComponents/Pagination'
-import ClientModel from '../Modals/ClientModel'
+import ClientModal from '../Modals/ClientModel'
+import ConfirmationPopup from '../components/ClientsComponents/ConfirmationPopup'
 
 const ClientsList = () => {
   const [clients, setClients] = useState([])
+  const [groups, setGroups] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedGroup, setSelectedGroup] = useState('0')
   const [selectedClient, setSelectedClient] = useState(null)
-
+  const [clientToDelete, setClientToDelete] = useState(null)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [modalMode, setModalMode] = useState('details')
   useEffect(() => {
-    // Sample client data
-    setClients([
-      {
-        id: 1,
-        photo: '/path/to/photo1.jpg', // URL to the client's photo; if empty, display a placeholder
-        lastname: 'قنفود',
-        firstname: 'أسامة',
-        registrationDate: '2024-07-24',
-        phone: '0644394032',
-        group: 'بدون مجموعة',
-        identifier: '12345',
-        gender: '1', // '1' for 'السيد', '2' for 'السيدة', '3' for 'الأنسة'
-        prenom_fr: 'Oussama',
-        nom_fr: 'Kenfoud',
-        date_naissance: '1990-05-14',
-        unknown_birth_date: false,
-        place_naissance: 'الجزائر',
-        blood_type: 'O+',
-        id_card_number: '123456789',
-        adresse: 'حي بئر مراد رايس، الجزائر',
-        date_insert: '2024-07-20', // Date of file submission
-        date_inscription: '2024-07-22', // Registration date
-        amount_paid: 1000 // Amount paid
-      }
-
-      // Additional sample clients
-    ])
+    fetchClientsAndGroups()
   }, [])
 
-  const handleSearch = (query, group) => {
+  const fetchClientsAndGroups = async () => {
+    try {
+      const [allClients, allGroups] = await Promise.all([
+        window.api.getAllClients(),
+        window.api.getAllGroups()
+      ])
+      setClients(allClients)
+      setGroups(allGroups)
+    } catch (error) {
+      console.error('Error fetching clients and groups:', error)
+    }
+  }
+
+  const handleSearch = (query) => {
     setSearchQuery(query)
-    setSelectedGroup(group)
   }
 
-  const handleUpdateClient = (updatedClient) => {
-    setClients((prevClients) =>
-      prevClients.map((client) => (client.id === updatedClient.id ? updatedClient : client))
-    )
-    setSelectedClient(null)
+  const handleUpdateClient = async (updatedClient) => {
+    try {
+      await window.api.updateClient(updatedClient)
+      setClients((prevClients) =>
+        prevClients.map((client) => (client._id === updatedClient._id ? updatedClient : client))
+      )
+      setSelectedClient(null)
+      setIsModalVisible(false)
+    } catch (error) {
+      console.error('Error updating client:', error)
+    }
   }
 
-  const filteredClients = clients.filter((client) => {
-    const matchesSearchQuery =
-      client.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.lastname.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesGroup = selectedGroup === '0' || client.group === selectedGroup
-    return matchesSearchQuery && matchesGroup
-  })
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return
 
+    try {
+      await window.api.deleteClient(clientToDelete._id)
+      setClients((prevClients) => prevClients.filter((client) => client._id !== clientToDelete._id))
+      setClientToDelete(null)
+      setShowDeleteConfirmation(false)
+    } catch (error) {
+      console.error('Error deleting client:', error)
+    }
+  }
+
+  const filteredClients = clients.filter((client) =>
+    client.nom.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  console.log(groups)
   return (
     <div
       className="w-full bg-gradient-to-b from-teal-50 to-cyan-100 py-8 px-4 sm:px-6 lg:px-8"
@@ -71,16 +75,43 @@ const ClientsList = () => {
         <NavBar />
         <Header />
         <div className="p-4">
-          <SearchBar clients={clients} onSearch={handleSearch} onFilter={handleSearch} />
-          <ClientTable clients={filteredClients} onEditClient={setSelectedClient} />
-          <Pagination />
+          <SearchBar onSearch={handleSearch} />
+          <ClientTable
+            clients={filteredClients}
+            getGroupNameById={(groupId) => {
+              const group = groups.find((group) => group._id === groupId)
+              return group ? group.name : 'بدون مجموعة'
+            }}
+            onEditClient={(client) => {
+              setSelectedClient(client)
+              setModalMode('edit')
+              setIsModalVisible(true)
+            }}
+            onShowDetails={(client) => {
+              setSelectedClient(client)
+              setModalMode('details')
+              setIsModalVisible(true)
+            }}
+            onDeleteClient={(client) => {
+              setClientToDelete(client)
+              setShowDeleteConfirmation(true)
+            }}
+          />
         </div>
       </div>
-      {selectedClient && (
-        <ClientModel
+      {isModalVisible && selectedClient && (
+        <ClientModal
           client={selectedClient}
-          onClose={() => setSelectedClient(null)}
+          onClose={() => setIsModalVisible(false)}
           onSave={handleUpdateClient}
+          mode={modalMode}
+        />
+      )}
+      {showDeleteConfirmation && clientToDelete && (
+        <ConfirmationPopup
+          message={`هل أنت متأكد من حذف العميل ${clientToDelete.nom} ${clientToDelete.prenom_fr}؟`}
+          onConfirm={handleDeleteClient}
+          onCancel={() => setShowDeleteConfirmation(false)}
         />
       )}
     </div>

@@ -1,33 +1,60 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
+import { join, resolve } from 'path'
+import { is } from '@electron-toolkit/utils'
 import fs from 'fs'
-import icon from '../../resources/icon.png?asset'
+import PouchDB from 'pouchdb'
+import pouchdbFind from 'pouchdb-find'
+import ipcHandlers from './ipcHandler'
+import path from 'path'
 
-function createCacheDirectories() {
-  const cacheDir = app.getPath('userData') + '/Cache'
-  const gpuCacheDir = app.getPath('userData') + '/GPUCache'
+PouchDB.plugin(pouchdbFind)
 
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true })
-  }
+// Ensure the database and Clients directory exist relative to the start directory
+const basePath = resolve(process.cwd(), 'out')
+const databasePath = resolve(basePath, 'database')
+const clientsPath = resolve(basePath, 'Clients')
 
-  if (!fs.existsSync(gpuCacheDir)) {
-    fs.mkdirSync(gpuCacheDir, { recursive: true })
-  }
+// Create directories if they don't exist
+if (!fs.existsSync(databasePath)) {
+  fs.mkdirSync(databasePath, { recursive: true })
 }
 
+if (!fs.existsSync(clientsPath)) {
+  fs.mkdirSync(clientsPath, { recursive: true })
+}
+
+// Initialize the PouchDB database
+const db = new PouchDB(join(databasePath, 'my_database'))
+
+// Set up a custom protocol to handle local files securely
+app.whenReady().then(() => {
+  protocol.registerFileProtocol('safe-file', (request, callback) => {
+    const url = request.url.substr(11) // Remove 'safe-file://' prefix
+    const decodedPath = decodeURIComponent(url)
+    const filePath = path.normalize(`${__dirname}/${decodedPath}`)
+    callback({ path: filePath })
+  })
+
+  // Create the main application window
+  createWindow()
+
+  // Re-open a window if all windows are closed (macOS behavior)
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+// Function to create the main window
 function createWindow() {
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: false // Disable web security to allow loading local resources
     }
   })
 
@@ -35,56 +62,19 @@ function createWindow() {
     mainWindow.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (is.dev && process.env.ELECTRON_RENDERER_URL) {
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  createCacheDirectories()
+// Initialize the IPC handlers with the database and file paths
+ipcHandlers(ipcMain, db, clientsPath)
 
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
-
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  createWindow()
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Quit the application when all windows are closed, except on macOS
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
